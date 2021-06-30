@@ -11,6 +11,10 @@ app.get('/user', (req,res) => {
     };
 
     res.json(pessoa);
-})
+});
+
+app.post('/mirror', (req,res) => {
+    res.json(req.body);
+});
 
 app.listen(3000, 'localhost', () => console.log('Servidor, rodando.'));
