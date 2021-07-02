@@ -1,7 +1,7 @@
 // Configuração inicial do Express
 require('dotenv').config();
 
-const User = require('./users/model/User');
+// const User = require('./users/model/User');
 
 const express = require('express');
 
