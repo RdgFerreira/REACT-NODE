@@ -1,4 +1,4 @@
-const router = require('express').router(); // Isolar as rotas p/ usuários
+const router = require('express').Router(); // Isolar as rotas p/ usuários
 const UserService = require('../service/UserService');
 
 router.post('/', async (req, res) => { // Create
