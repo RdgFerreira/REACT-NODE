@@ -18,7 +18,7 @@ router.post('/', async (req, res) => { // Create
   }
 });
 
-router.get('./', async (req, res) => { // Read
+router.get('/', async (req, res) => { // Read
   try {
     const users = await UserService.getAllUsers();
 
@@ -60,6 +60,7 @@ router.delete('/user/:id', async (req, res) => { // Delete
     console.log(error);
   }
 });
+
 
 module.exports = router;
 

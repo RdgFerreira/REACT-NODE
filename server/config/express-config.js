@@ -17,6 +17,6 @@ app.use(express.urlencoded({
 app.use(express.json());
 
 const usersRouter = require('../users/controller/user-controller');
-app.use('/.users', usersRouter); // Definição de Router de usuários
+app.use('/users', usersRouter); // Definição de Router de usuários
 
 module.exports = app;
