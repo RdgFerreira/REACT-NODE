@@ -1,5 +1,8 @@
 const router = require('express').Router(); // Isolar as rotas p/ usuários
+// const {route} = require('../../config/express-config');
+const passport = require('passport');
 const UserService = require('../service/UserService');
+const jwt = require('jsonwebtoken');
 
 router.post('/', async (req, res) => { // Create
   try {
@@ -59,6 +62,44 @@ router.delete('/user/:id', async (req, res) => { // Delete
   } catch (error) {
     console.log(error);
   }
+});
+
+router.post('/login', (req, res, next) => {
+  passport.authenticate(
+    'login',
+    (err, user, info) => { // Custom callback
+      try {
+        if (err) {
+          return next(err);
+        }
+
+        req.login(
+          user,
+          {session: false},
+          (error) => {
+            if (error) next(error);
+
+            const body = {
+              id: user.id,
+              role: user.role,
+            };
+
+            const token = jwt.sign({user: body}, process.env.SECRET_KEY,
+              {expiresIn: process.env.JWT_EXPIRATION});
+
+            res.cookie('jwt', token, {
+              httpOnly: true,
+              secure: process.env.NODE_ENV === 'production',
+            });
+
+            res.status(204).end();
+          },
+        );
+      } catch (error) {
+        next(error);
+      }
+    },
+  )(req, res, next);
 });
 
 
