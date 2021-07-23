@@ -1,9 +1,15 @@
 const router = require('express').Router(); // Isolar as rotas p/ usuários
 // const {route} = require('../../config/express-config');
-const passport = require('passport');
 const UserService = require('../service/UserService');
-const jwt = require('jsonwebtoken');
 
+// require de middlewares
+const {
+  loginMiddleware,
+  notLoggedIn,
+  jwtMiddleware,
+} = require('../../middlewares/auth-middlewares');
+
+// CRIAR USER
 router.post('/', async (req, res) => { // Create
   try {
     const user = {
@@ -21,7 +27,8 @@ router.post('/', async (req, res) => { // Create
   }
 });
 
-router.get('/', async (req, res) => { // Read
+// RETRIEVE DE USERS
+router.get('/', jwtMiddleware, async (req, res) => { // Read
   try {
     const users = await UserService.getAllUsers();
 
@@ -31,7 +38,8 @@ router.get('/', async (req, res) => { // Read
   }
 });
 
-router.get('/user/:id', async (req, res) => {
+// RETRIEVE DE USER ESPECÍFICO
+router.get('/user/:id', jwtMiddleware, async (req, res) => {
   try {
     const userID = req.params.id;
     const user = await UserService.getUsersById(userID);
@@ -42,66 +50,42 @@ router.get('/user/:id', async (req, res) => {
   }
 });
 
-router.put('/user/:id', async (req, res) => { // Update
+// UPDATE DE USER ESPECÍFICO
+router.put('/user/:id', jwtMiddleware, async (req, res) => { // Update
   try {
     const userID = req.params.id;
     await UserService.updateUser(userID, req.body);
 
-    res.status(204).end;
+    res.status(204).end();
   } catch (error) {
     console.log(error);
   }
 });
 
-router.delete('/user/:id', async (req, res) => { // Delete
+// DELEÇÃO DE USER ESPECÍFICO
+router.delete('/user/:id', jwtMiddleware, async (req, res) => { // Delete
   try {
     const userID = req.params.id;
     await UserService.deleteUser(userID);
 
-    res.status(204).end;
+    res.status(204).end();
   } catch (error) {
     console.log(error);
   }
 });
 
-router.post('/login', (req, res, next) => {
-  passport.authenticate(
-    'login',
-    (err, user, info) => { // Custom callback
-      try {
-        if (err) {
-          return next(err);
-        }
+// LOGIN
+router.post('/login', notLoggedIn, loginMiddleware);
 
-        req.login(
-          user,
-          {session: false},
-          (error) => {
-            if (error) next(error);
-
-            const body = {
-              id: user.id,
-              role: user.role,
-            };
-
-            const token = jwt.sign({user: body}, process.env.SECRET_KEY,
-              {expiresIn: process.env.JWT_EXPIRATION});
-
-            res.cookie('jwt', token, {
-              httpOnly: true,
-              secure: process.env.NODE_ENV === 'production',
-            });
-
-            res.status(204).end();
-          },
-        );
-      } catch (error) {
-        next(error);
-      }
-    },
-  )(req, res, next);
+// LOGOUT
+router.get('/logout', jwtMiddleware, (req, res) => {
+  try {
+    res.clearCookie('jwt');
+    res.status(204).end();
+  } catch (error) {
+    console.log(error);
+  }
 });
 
 
 module.exports = router;
-
