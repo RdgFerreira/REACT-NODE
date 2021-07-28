@@ -49,13 +49,26 @@ function jwtMiddleware(req, res, next) {
       return next(err);
     }
     if (!user) {
-      res.status(401).send('Você precisa estar logado para realizar essa ação');
+      return res.status(401).send(
+        'Você precisa estar logado para realizar essa ação');
     }
 
     req.user = user;
 
     next();
   })(req, res, next);
+}
+
+function checkRole(role) {
+  return (req, res, next) => {
+    if (req.user) {
+      if (req.user.role === role) {
+        next();
+      } else {
+        res.status(401).send('Você não tem permissão para realizar essa ação');
+      }
+    }
+  };
 }
 
 // middleware para checkagem se o usuário já esta logado
@@ -76,4 +89,5 @@ module.exports = {
   loginMiddleware,
   notLoggedIn,
   jwtMiddleware,
+  checkRole,
 };

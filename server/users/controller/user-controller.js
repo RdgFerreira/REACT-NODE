@@ -7,6 +7,7 @@ const {
   loginMiddleware,
   notLoggedIn,
   jwtMiddleware,
+  checkRole,
 } = require('../../middlewares/auth-middlewares');
 
 // CRIAR USER
@@ -54,25 +55,28 @@ router.get('/user/:id', jwtMiddleware, async (req, res) => {
 router.put('/user/:id', jwtMiddleware, async (req, res) => { // Update
   try {
     const userID = req.params.id;
-    await UserService.updateUser(userID, req.body);
+    await UserService.updateUser(userID, req.user.id, req.user.role, req.body);
 
     res.status(204).end();
   } catch (error) {
-    console.log(error);
+    res.status(400).send(error.message);
   }
 });
 
 // DELEÇÃO DE USER ESPECÍFICO
-router.delete('/user/:id', jwtMiddleware, async (req, res) => { // Delete
-  try {
-    const userID = req.params.id;
-    await UserService.deleteUser(userID);
+router.delete('/user/:id',
+  jwtMiddleware,
+  checkRole('admin'),
+  async (req, res) => { // Delete
+    try {
+      const userID = req.params.id;
+      await UserService.deleteUser(userID, req.user.id);
 
-    res.status(204).end();
-  } catch (error) {
-    console.log(error);
-  }
-});
+      res.status(204).end();
+    } catch (error) {
+      res.status(400).send(error.message);
+    }
+  });
 
 // LOGIN
 router.post('/login', notLoggedIn, loginMiddleware);
@@ -85,6 +89,12 @@ router.get('/logout', jwtMiddleware, (req, res) => {
   } catch (error) {
     console.log(error);
   }
+});
+
+router.get('/me', jwtMiddleware, async (req, res) => {
+  const user = await UserService.getCurrentUser(req.user.id);
+
+  res.status(200).json(user);
 });
 
 
