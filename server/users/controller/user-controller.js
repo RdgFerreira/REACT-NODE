@@ -10,23 +10,32 @@ const {
   checkRole,
 } = require('../../middlewares/auth-middlewares');
 
-// CRIAR USER
-router.post('/', async (req, res) => { // Create
-  try {
-    const user = {
-      name: req.body.name,
-      email: req.body.email,
-      password: req.body.password,
-      image: req.body.image,
-      role: 'user',
-    };
-    await UserService.createUser(user);
+// require do filtro
+const objectFilter = require('../../middlewares/object-filter');
+// require das validações
+const userValidate = require('../../middlewares/user-validator');
 
-    res.status(201).end(); // Resposta vazia bem sucedida
-  } catch (error) {
-    console.log(error);
-  }
-});
+// CRIAR USER
+router.post('/',
+  objectFilter('body', ['name', 'email', 'image', 'password']),
+  userValidate('createUser'),
+  async (req, res) => {
+    try {
+      const user = {
+        name: req.body.name,
+        email: req.body.email,
+        password: req.body.password,
+        image: req.body.image,
+        role: 'user',
+      };
+
+      await UserService.createUser(user);
+
+      res.status(201).end(); // Resposta vazia bem sucedida
+    } catch (error) {
+      console.log(error);
+    }
+  });
 
 // RETRIEVE DE USERS
 router.get('/', jwtMiddleware, async (req, res) => { // Read
@@ -52,16 +61,21 @@ router.get('/user/:id', jwtMiddleware, async (req, res) => {
 });
 
 // UPDATE DE USER ESPECÍFICO
-router.put('/user/:id', jwtMiddleware, async (req, res) => { // Update
-  try {
-    const userID = req.params.id;
-    await UserService.updateUser(userID, req.user.id, req.user.role, req.body);
+router.put('/user/:id',
+  jwtMiddleware,
+  objectFilter('body', ['name', 'email', 'image']),
+  userValidate('updateUser'),
+  async (req, res) => { // Update
+    try {
+      const userID = req.params.id;
+      await UserService.updateUser(
+        userID, req.user.id, req.user.role, req.body);
 
-    res.status(204).end();
-  } catch (error) {
-    res.status(400).send(error.message);
-  }
-});
+      res.status(204).end();
+    } catch (error) {
+      res.status(400).send(error.message);
+    }
+  });
 
 // DELEÇÃO DE USER ESPECÍFICO
 router.delete('/user/:id',
@@ -79,7 +93,7 @@ router.delete('/user/:id',
   });
 
 // LOGIN
-router.post('/login', notLoggedIn, loginMiddleware);
+router.post('/login', notLoggedIn, userValidate('login'), loginMiddleware);
 
 // LOGOUT
 router.get('/logout', jwtMiddleware, (req, res) => {
